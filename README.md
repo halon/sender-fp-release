@@ -19,7 +19,7 @@ Add the following code to the DATA flow (or an include file) or some variant of 
 ```
 function Reject($msg) {
         ...
-        if (GetAttachmentSize("/")[0] < 1024*1024*1024) {
+        if (GetAttachmentSize("/")[0] < 10*1024*1024) {
                 SetDelayedDeliver(3600*24);
                 SetMailTransport("mailtransport:X"); // Quarantine
                 CopyMail();
