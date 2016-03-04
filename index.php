@@ -13,7 +13,7 @@ try {
 		$res = json_decode(file_get_contents($url), true);
 		if ($res['success'] !== true)
 			throw new UIException('Click the reCAPTCHA checkbox to continue: '.implode($res['error-codes'], ', '));
-		$q = $dbh->prepare('INSERT INTO release (node, msgid, ip, comment) VALUES (:node, :msgid, :ip, :comment);');
+		$q = $dbh->prepare('INSERT INTO release_sender (node, msgid, ip, comment) VALUES (:node, :msgid, :ip, :comment);');
 		$ret = $q->execute([
 			':node' => $_GET['node'],
 			':msgid' => $_GET['msgid'],
@@ -69,7 +69,7 @@ function p($str) {
 		<?php
 		try {
 		if (isset($_GET['token'])) {
-			$q = $dbh->prepare('SELECT * FROM release AS r INNER JOIN release_rcpt AS rr ON r.id = rr.release_id WHERE rr.id = :id AND token = :token;');
+			$q = $dbh->prepare('SELECT * FROM release_sender AS r INNER JOIN release_rcpt AS rr ON r.id = rr.release_id WHERE rr.id = :id AND token = :token;');
 			$q->execute([':id' => $_GET['id'], ':token' => $_GET['token']]);
 			$row = $q->fetch(PDO::FETCH_ASSOC);
 			if (!$row)
@@ -192,7 +192,7 @@ function p($str) {
 		</div>
 		<?php
 		} else if (isset($_GET['msgid']) && isset($_GET['node'])) {
-			$q = $dbh->prepare('SELECT * FROM release WHERE msgid = :msgid AND node = :node;');
+			$q = $dbh->prepare('SELECT * FROM release_sender WHERE msgid = :msgid AND node = :node;');
 			$q->execute([':msgid' => $_GET['msgid'], ':node' => $_GET['node']]);
 			$row = $q->fetch(PDO::FETCH_ASSOC);
 			if (!isset($soap_hosts[$_GET['node']]))

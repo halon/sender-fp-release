@@ -1,4 +1,4 @@
-CREATE TABLE release (
+CREATE TABLE release_sender (
 	id          BIGSERIAL PRIMARY KEY,
 	ts          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	ip          VARCHAR(100),
@@ -11,10 +11,10 @@ CREATE TABLE release (
 	msgrpdrefid TEXT,
 	msgrpdscore INT
 );
-CREATE INDEX msgid_idx ON release (msgid,node);
+CREATE INDEX msgid_idx ON release_sender (msgid,node);
 CREATE TABLE release_rcpt (
 	id          BIGSERIAL PRIMARY KEY,
-	release_id  BIGINT REFERENCES release (id),
+	release_id  BIGINT REFERENCES release_sender (id),
 	status      INT DEFAULT 0,
 	queueid     BIGINT,
 	msgto       VARCHAR(300),

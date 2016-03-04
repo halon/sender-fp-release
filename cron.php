@@ -4,7 +4,7 @@ if (php_sapi_name() !== 'cli') die('only executable from CLI');
 
 require_once 'settings.php';
 
-$q = $dbh->prepare('SELECT * FROM release WHERE found = -1;');
+$q = $dbh->prepare('SELECT * FROM release_sender WHERE found = -1;');
 $q->execute();
 while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	sleep(3);
@@ -30,7 +30,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	}
 	if (!isset($items->result->item) || count($items->result->item) < 1) {
 		echo "Message not in queue\n";
-		$q2 = $dbh->prepare('UPDATE release SET found=0 WHERE id = :id;');
+		$q2 = $dbh->prepare('UPDATE release_sender SET found=0 WHERE id = :id;');
 		$q2->execute([':id' => $row['id']]);
 		continue;
 	}
@@ -41,7 +41,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 		foreach ($mail->msgscore->item as $score)
 			if ($score->first == 3)
 				list ($rpdscore, $rpdrefid) = explode('|', $score->second);
-	$q2 = $dbh->prepare('UPDATE release SET found=1,msgfrom=:msgfrom,msgsubject=:msgsubject,msgrpdscore=:msgrpdscore,msgrpdrefid=:msgrpdrefid WHERE id = :id;');
+	$q2 = $dbh->prepare('UPDATE release_sender SET found=1,msgfrom=:msgfrom,msgsubject=:msgsubject,msgrpdscore=:msgrpdscore,msgrpdrefid=:msgrpdrefid WHERE id = :id;');
 	$q2->execute([
 		':id' => $row['id'],
 		':msgfrom' => $mail->msgfrom,
@@ -75,7 +75,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	}
 }
 
-$q = $dbh->prepare('SELECT * FROM release AS r INNER JOIN release_rcpt AS rr ON r.id = rr.release_id WHERE status = 1;');
+$q = $dbh->prepare('SELECT * FROM release_sender AS r INNER JOIN release_rcpt AS rr ON r.id = rr.release_id WHERE status = 1;');
 $q->execute();
 while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	$host = $soap_hosts[$row['node']];
