@@ -18,5 +18,9 @@ $apikey = 'secret';
 $mail_headers  = "Content-type: text/plain; charset=utf-8\r\n";
 $mail_headers .= "From: Example <support@example.com>";
 
-$dbh = new PDO('pgsql:host=127.0.0.1;dbname=XXX;user=XXX;password=XXX');
+$dsn = 'pgsql:host=127.0.0.1;dbname=XXX';
+$db_user = 'XXX';
+$db_pass = 'XXX';
+
+$dbh = new PDO($dsn, $db_user, $db_pass);
 $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
