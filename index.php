@@ -12,7 +12,7 @@ try {
 		$url .= '&remoteip='.$_SERVER['REMOTE_ADDR'];
 		$res = json_decode(file_get_contents($url), true);
 		if ($res['success'] !== true)
-			throw new UIException('Click the reCAPTCHA checkbox to continue: '.implode($res['error-codes'], ', '));
+			throw new UIException('Click the reCAPTCHA checkbox to continue: '.implode(', ', $res['error-codes']));
 		$q = $dbh->prepare('INSERT INTO release_sender (node, msgid, ip, comment) VALUES (:node, :msgid, :ip, :comment);');
 		$ret = $q->execute([
 			':node' => $_GET['node'],
