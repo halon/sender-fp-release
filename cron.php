@@ -23,7 +23,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 		    'login' => $soap_user,
 		    'password' => $soap_pass
 		    ]);
-		$items = $client->mailQueue(array('filter' => 'messageid='.$id, 'offset' => '0', 'limit' => 50));
+		$items = $client->mailQueue(array('filter' => 'messageid='.$id.' transport='.$transportid, 'offset' => '0', 'limit' => 50));
 	} catch (Exception $e) {
 		echo $e->getMessage();
 		continue;

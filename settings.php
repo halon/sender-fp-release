@@ -9,6 +9,7 @@ $soap_hosts = [
 	'se1' => 'se1.example.com',
 	...
 ];
+$transportid = 'mailtransport:X';
 
 $recaptcha_secret = 'XXX';
 $recaptcha_sitekey = 'XXX';
