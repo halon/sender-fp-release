@@ -23,13 +23,13 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 		    'login' => $soap_user,
 		    'password' => $soap_pass
 		    ]);
-		$items = $client->mailQueue(array('filter' => 'messageid='.$id.' transport='.$transportid, 'offset' => '0', 'limit' => 50));
+		$items = $client->mailQueue(array('filter' => 'messageid='.$id.' quarantine='.$quarantine_short, 'offset' => '0', 'limit' => 50));
 	} catch (Exception $e) {
 		echo $e->getMessage();
 		continue;
 	}
 	if (!isset($items->result->item) || count($items->result->item) < 1) {
-		echo "Message not in queue\n";
+		echo "Email not found\n";
 		$q2 = $dbh->prepare('UPDATE release_sender SET found=0 WHERE id = :id;');
 		$q2->execute([':id' => $row['id']]);
 		continue;
@@ -51,6 +51,20 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	]);
 	foreach ($items->result->item as $mail) {
 		sleep(3);
+               // Move to long-term quarantine
+               try {
+                       $client = new SoapClient('https://'.$host.'/remote/?wsdl', [
+                               'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
+                               'location' => 'https://'.$host.'/remote/',
+                               'uri' => 'urn:halon',
+                               'login' => $soap_user,
+                               'password' => $soap_pass
+                               ]);
+                       $items = $client->mailQueueUpdateBulk(array('filter' => 'messageid='.$id.' quarantine='.$quarantine_short, 'fields' => [["first"=>"quarantine", "second"=>$quarantine_long]]));
+               } catch (Exception $e) {
+                       echo $e->getMessage();
+                       continue;
+               }
 		$token = bin2hex(openssl_random_pseudo_bytes(12));
 		$q2 = $dbh->prepare('INSERT INTO release_rcpt (release_id,queueid,msgto,token) VALUES (:id,:queueid,:msgto,:token);');
 		$q2->execute([

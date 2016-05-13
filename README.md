@@ -10,50 +10,19 @@ However, in order to further reduce the support burden, this adaptive quarantine
 Halon installation
 ------------------
 
-The most convenient way to implement this report-release logic on the Halon (MTA) side is probably to use a separate transport (queue template) for quarantining the spam. It allows you to efficiently filter out those email, when working with the queue (because `$transportid` is indexed in the database, and available as a http://wiki.halon.io/Search_filter field).
+Begin by creating two quarantines with meaningful names such as "Sender FP release - short" and "Sender FP release - long".
 
-Begin by creating a mail transport with a meaningful name such as "Quarantine" or "sender-fp-release".
-
-Add the following code to the DATA flow (or an include file) or some variant of it, and replace " X" with the transport ID:
+Add the following code to the DATA flow (or an include file) or some variant of it, and replace "X" with the quarantine ID:
 
 ```
 function Reject($msg) {
         ...
         if (GetAttachmentSize("/")[0] < 10*1024*1024) {
-                SetDelayedDeliver(3600*24);
-                SetMailTransport("mailtransport:X"); // Quarantine
-                CopyMail();
+                global $messageid;
+                builtin Quarantine("mailquarantine:X", ["done" => false, "reject" => false]); // "... - short"
                 $node = explode(".", gethostname())[0];
                 $msg .= " Release at https://release.example.com/?msgid=$messageid&node=$node";
         }
         builtin Reject($msg);
-}
-```
-
-Finally add the following code to the pre-delivery script, again replacing "X" and the API URL:
-
-```
-if ($transportid == "mailtransport:X") {
-        // Quarantine
-        $queuetime = time() - $receivedtime;
-        $node = explode(".", gethostname())[0];
-        $opt = ["timeout" => 5, "connect_timeout" => 5, "ssl_default_ca" => true, "ssl_verify_host" => true];
-        $get = [$queueid, $node];
-        $res = http("https://release.example.com/api.php?apikey=secret&type=status&queueid=$1&node=$2", $opt, $get);
-        $res = json_decode($res);
-        if (!isset($res["status"])) {
-                // API error
-                Reschedule(3600, ["reason" => "Invalid API response", "increment_retry" => false]);
-        } else if ($res["status"] == "release") {
-                // Recipient released, fall-through to routing
-        } else if ($queuetime > 3600*24 and $res["status"] == "delete") {
-                // At least 1 day has passed, sender didn't report yet
-                Delete();
-        } else if ($queuetime > 3600*24*7) {
-                // At least 7 days has passed, recipient didn't release yet
-                Delete();
-        } else {
-                Reschedule(3600*24, ["reason" => "Keep in quarantine", "increment_retry" => false]);
-        }
 }
 ```

@@ -9,7 +9,8 @@ $soap_hosts = [
 	'se1' => 'se1.example.com',
 	...
 ];
-$transportid = 'mailtransport:X';
+$quarantine_short = 'mailquarantine:X';
+$quarantine_long = 'mailquarantine:X';
 
 $recaptcha_secret = 'XXX';
 $recaptcha_sitekey = 'XXX';
