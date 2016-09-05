@@ -17,7 +17,7 @@ Add the following code to the DATA flow (or an include file) or some variant of 
 ```
 function Reject($msg) {
         ...
-        if (GetAttachmentSize("/")[0] < 10*1024*1024) {
+        if (MIME("0")->getSize() < 10*1024*1024) {
                 global $messageid;
                 builtin Quarantine("mailquarantine:X", ["done" => false, "reject" => false]); // "... - short"
                 $node = explode(".", gethostname())[0];
