@@ -15,8 +15,6 @@ $quarantine_long = 'mailquarantine:X';
 $recaptcha_secret = 'XXX';
 $recaptcha_sitekey = 'XXX';
 
-$apikey = 'secret';
-
 $mail_headers  = "Content-type: text/plain; charset=utf-8\r\n";
 $mail_headers .= "From: Example <support@example.com>";
 
