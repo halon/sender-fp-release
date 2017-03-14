@@ -10,19 +10,29 @@ However, in order to further reduce the support burden, this adaptive quarantine
 Halon installation
 ------------------
 
-Begin by creating two quarantines with meaningful names such as "Sender FP release - short" and "Sender FP release - long".
+Begin by creating two quarantines with comments such as "Sender FP release - short" and "Sender FP release - long".
 
-Add the following code to the DATA flow (or an include file) or some variant of it, and replace "X" with the quarantine ID:
+Add the following code to the DATA flow (or an include file) or some variant of it, and replace "X" with the quarantine ID of the short one:
 
 ```
 function Reject($msg) {
         ...
         if (MIME("0")->getSize() < 10*1024*1024) {
                 global $messageid;
-                builtin Quarantine("mailquarantine:X", ["done" => false, "reject" => false]); // "... - short"
+                builtin Quarantine("mailquarantine:X", ["done" => false, "reject" => false]);
                 $node = explode(".", gethostname())[0];
                 $msg .= " Release at https://release.example.com/?msgid=$messageid&node=$node";
         }
         builtin Reject($msg);
+}
+```
+
+and add the following API script, where you replace "XXX" with the SHA1 hash of the password from settings.php: 
+
+```
+if ($username == "reportfp" and sha1($password) == "XXX") {
+    if ($soapcall == "mailQueue") Authenticate();
+    if ($soapcall == "mailQueueRetry") Authenticate();
+    if ($soapcall == "mailQueueUpdateBulk") Authenticate();
 }
 ```
