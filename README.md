@@ -31,8 +31,8 @@ and add the following API script, where you replace "XXX" with the SHA1 hash of 
 
 ```
 if ($username == "reportfp" and sha1($password) == "XXX") {
-    if ($soapcall == "mailQueue") Authenticate();
-    if ($soapcall == "mailQueueRetry") Authenticate();
-    if ($soapcall == "mailQueueUpdateBulk") Authenticate();
+        if ($soapcall == "mailQueue") Authenticate();
+        if ($soapcall == "mailQueueRetry") Authenticate();
+        if ($soapcall == "mailQueueUpdateBulk") Authenticate();
 }
 ```
