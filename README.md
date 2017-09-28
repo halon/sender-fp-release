@@ -7,7 +7,13 @@ We normally recommend our customers to reject spam, because the accuracy of the 
 
 However, in order to further reduce the support burden, this adaptive quarantine can be used. Similar to our "reject recommendation", it's the sender that initiate the release process, after having passed a CAPCHA test. The recipient is notified via an automated email, with a link to release the message. Since the sender is notified of the blocked email immediately, un-reported spam can be retained during a very short period (for example 1 day). Once reported however, the retention time is extended (to for example 1 week), giving the recipient plenty of time to check the inbox, find the report, and release the blocked email.
 
-Halon installation
+Installation
+------------
+
+1. Run the SQL queries listed in the text file for the database type you want to use to craete the necessary tables
+2. Copy the `/settings-default.php` file to `/settings.php` and open it to change the settings.
+
+Halon integration
 ------------------
 
 Begin by creating two quarantines with comments such as "Sender FP release - short" and "Sender FP release - long".

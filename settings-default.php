@@ -7,8 +7,9 @@ $soap_user = 'reportfp';
 $soap_pass = 'XXX';
 $soap_hosts = [
 	'se1' => 'se1.example.com',
-	...
+	'se2' => 'se2.example.com'
 ];
+
 $quarantine_short = 'mailquarantine:X';
 $quarantine_long = 'mailquarantine:X';
 
@@ -18,7 +19,7 @@ $recaptcha_sitekey = 'XXX';
 $mail_headers  = "Content-type: text/plain; charset=utf-8\r\n";
 $mail_headers .= "From: Example <support@example.com>";
 
-$dsn = 'pgsql:host=127.0.0.1;dbname=XXX';
+$dsn = 'mysql:host=127.0.0.1;dbname=reportfp';
 $db_user = 'XXX';
 $db_pass = 'XXX';
 
