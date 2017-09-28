@@ -10,7 +10,7 @@ However, in order to further reduce the support burden, this adaptive quarantine
 Installation
 ------------
 
-1. Run the SQL queries listed in the text file for the database type you want to use to craete the necessary tables
+1. Run the SQL queries listed in the text file for the database type you want to use to create the necessary tables
 2. Copy the `/settings-default.php` file to `/settings.php` and open it to change the settings.
 
 Halon integration
