@@ -1,0 +1,121 @@
+{% extends "base.twig" %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-6">
+		{% block alerts %}
+		{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+		{% endblock %}
+		<div class="alert alert-warning">
+			<strong>Warning!</strong>
+			This is an email which was blocked
+			by an anti-spam/virus filter. Just like any other email,
+			it may contain malicious content.
+		</div>
+		{% if release.result.status == 2 %}
+		<div class="alert alert-success"><strong>Done!</strong> The email has been released, and is on its way to you.</div>
+		{% elseif release.result.status == 1 %}
+		<div class="alert alert-info"><strong>Sending...</strong> Please wait while the email is being sent to you.</div>
+		<script>setTimeout('location.reload()', 1000);</script>
+		{% elseif release.result.status == 0 %}
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<h3 class="panel-title">Release blocked email</h3>
+			</div>
+			<div class="panel-body">
+				<dl class="dl-horizontal" style="overflow-wrap: break-word">
+					<dt>Sender's comment</dt>
+					<dd>{{release.result.comment|e}}</dd>
+					<dt>From</dt>
+					<dd>{{release.result.msgfrom|e}}</dd>
+					<dt>To</dt>
+					<dd>{{release.result.msgto|e}}</dd>
+					<dt>Subject</dt>
+					<dd>{{release.result.msgsubject|e}}</dd>
+				</dl>
+				<form method="post">
+					<button class="btn btn-primary pull-right" name="release" type="submit">
+						<span class="glyphicon glyphicon-send"></span>
+						Release
+					</button>
+				</form>
+			</div>
+		</div>
+		{% endif %}
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">
+					<a role="button" data-toggle="collapse" href="#collapse_tech">
+						Technical information
+					</a>
+				</h3>
+			</div>
+			<div id="collapse_tech" class="panel-collapse collapse">
+			<div class="panel-body">
+				<dl class="dl-horizontal" style="overflow-wrap: break-word">
+					<dt>RPD</dt>
+					<dd>{{release.rpdscores[release.result.msgrpdscore]|e}}</dd>
+					<dt>Reference</dt>
+					<dd>{{release.result.msgrpdrefid|e}}</dd>
+					<dt>ID</dt>
+					<dd>{{release.result.msgid|e}}</dd>
+					<dt>Node</dt>
+					<dd>{{release.result.node|e}}</dd>
+				</dl>
+			</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">What has happened?</h3>
+			</div>
+			<div class="panel-body small">
+				<p>
+					You probably came to this page because someone sent
+					an email to you, which was blocked (and quarantined)
+					by the spam/virus filter.
+					The sender was informed about this, and given the
+					option to report this to you (after passing a
+					<a href="https://en.wikipedia.org/wiki/CAPTCHA">CAPTCHA</a> test).
+				</p>
+				<p>
+					Within 7 days after being sent, you can release this email
+					from the quarantine. If you press the "Release" button to the
+					left, the email will be sent to you.
+					<strong>Please keep in mind that the message, just like any other
+					email, could contain malicious content!</strong>
+				</p>
+				<p>
+					This is the complete process:
+					<ol>
+						<li>Someone (the <em>sender</em>) sends an email to you</li>
+						<li>
+							The email is blocked, but
+							<ul>
+								<li>The email is retained on our servers for 1 day</li>
+								<li>The sender receives a bounce (notification) with a report link</li>
+							</ul>
+						</li>
+						<li>
+							The sender follows the link in the bounce and presses the button, which
+							<ul>
+								<li>Extends the retention period of the email to 7 days</li>
+								<li>Generates an email to you with a link</li>
+							</ul>
+						</li>
+						<li>
+							You follow the link in that report, and end up on this page
+							<ul>
+								<li>If you release the email within 7 days, it will be delivered to you</li>
+								<li>If the email was legitimate, we encourage you to report this incident to your administrator (including the text from the technical information panel)</li>
+							</ul>
+						</li>
+					</ol>
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

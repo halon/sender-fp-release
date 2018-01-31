@@ -2,27 +2,40 @@
 
 if (php_sapi_name() !== 'cli') die('only executable from CLI');
 
-require_once 'settings.php';
+define('BASE', dirname(__FILE__));
+require_once BASE.'/settings.php';
+require_once BASE.'/vendor/autoload.php';
+
+$soap_options = [];
+foreach ($soap_hosts as $host => $options) {
+	$soap_options[$host] = [
+		'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
+		'location' => $options['address'].'/remote/',
+		'uri' => 'urn:halon',
+		'login' => $options['username'],
+		'password' => $options['password']
+	];
+}
+
+if (empty($soap_options))
+	die("Couldn't find any hosts.");
+
+$loader = new Twig_Loader_Filesystem(BASE.'/templates');
+$twig = new Twig_Environment($loader);
 
 $q = $dbh->prepare('SELECT * FROM release_sender WHERE found = -1;');
 $q->execute();
 while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	sleep(3);
-	$host = $soap_hosts[$row['node']];
-	if (!$host) {
+	$host_options = $soap_options[$row['node']];
+	if (!$host_options) {
 		echo "Invalid node\n";
 		continue;
 	}
 	$id = $row['msgid'];
-	echo "Fetching $id from $host\n";
+	echo "Fetching $id from ".$host_options['location']."\n";
 	try {
-		$client = new SoapClient('https://'.$host.'/remote/?wsdl', [
-			'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
-			'location' => 'https://'.$host.'/remote/',
-			'uri' => 'urn:halon',
-			'login' => $soap_user,
-			'password' => $soap_pass
-		]);
+		$client = new SoapClient($host_options['location'].'?wsdl', $host_options);
 		$items = $client->mailQueue(array('filter' => 'messageid='.$id.' quarantine='.$quarantine_short, 'offset' => '0', 'limit' => 50));
 	} catch (Exception $e) {
 		echo $e->getMessage();
@@ -53,13 +66,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 		sleep(3);
 		// Move to long-term quarantine
 		try {
-			$client = new SoapClient('https://'.$host.'/remote/?wsdl', [
-				'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
-				'location' => 'https://'.$host.'/remote/',
-				'uri' => 'urn:halon',
-				'login' => $soap_user,
-				'password' => $soap_pass
-			]);
+			$client = new SoapClient($host_options['location'].'?wsdl', $host_options);
 			$items = $client->mailQueueUpdateBulk(array('filter' => 'messageid='.$id.' quarantine='.$quarantine_short, 'fields' => [["first"=>"quarantine", "second"=>$quarantine_long]]));
 		} catch (Exception $e) {
 			echo $e->getMessage();
@@ -85,24 +92,18 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 			$row2 = $q2->fetch(PDO::FETCH_ASSOC);
 			$insertid = $row2['id']; 
 		}
-		mail($mail->msgto, 'Release blocked email', "Hi,\r\n\r\nThe spam filter blocked an email from {$mail->msgfrom}, but the sender has insisted that the email is genuine. To view or release the email, please click this link: https://release.example.com/?id={$insertid}&token={$token}\r\n\r\nThe Example.com support team\r\nhttp://example.com\r\n\r\nThis email message was auto-generated.", $mail_headers);
+		mail($mail->msgto, $mail_template['subject'], $twig->render('mail.twig', ['msgfrom' => $mail->msgfrom, 'template' => $template, 'id' => $insertid, 'token' => $token]), implode("\r\n", $mail_template['headers']));
 	}
 }
 
 $q = $dbh->prepare('SELECT * FROM release_sender AS r INNER JOIN release_rcpt AS rr ON r.id = rr.release_id WHERE status = 1;');
 $q->execute();
 while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
-	$host = $soap_hosts[$row['node']];
+	$host_options = $soap_options[$row['node']];
 	$id = $row['queueid'];
-	echo "Release $id from $host\n";
+	echo "Release $id from ".$host_options['location']."\n";
 	try {
-		$client = new SoapClient('https://'.$host.'/remote/?wsdl', [
-			'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
-			'location' => 'https://'.$host.'/remote/',
-			'uri' => 'urn:halon',
-			'login' => $soap_user,
-			'password' => $soap_pass
-		]);
+		$client = new SoapClient($host_options['location'].'?wsdl', $host_options);
 		$ret = $client->mailQueueRetry(['id' => $id]);
 	} catch (Exception $e) {
 		if ($e->getMessage() == 'queueid not found') {
