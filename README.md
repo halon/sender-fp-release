@@ -12,7 +12,7 @@ Requirements
 
 * PHP compatible web server (Apache, NGINX, IIS)
 * PHP (>=7.0)
-* SQL server (MySQL >=5.5 or PostgreSQL >= 9.4)
+* SQL server (MySQL >= 5.5 or PostgreSQL >= 9.4)
 * [Composer](https://getcomposer.org)
 
 Installation
