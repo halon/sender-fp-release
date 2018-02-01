@@ -60,8 +60,6 @@ try {
 		$result = $q->fetch(PDO::FETCH_ASSOC);
 		if (!isset($soap_hosts[$_GET['node']]))
 			throw new UIException('Invalid node "'.$_GET['node'].'", please check your link.');
-		if (!$result)
-			throw new UIException('Invalid link.');
 
 		$report['comment'] = (isset($_POST['comment'])) ? $_POST['comment'] : null;
 		$report['recaptcha_sitekey'] = $recaptcha_sitekey;
