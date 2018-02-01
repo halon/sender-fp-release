@@ -5,7 +5,7 @@ CREATE TABLE release_sender (
 	comment     TEXT,
 	found       INT DEFAULT -1,
 	node        VARCHAR(100),
-	msgid       VARCHAR(300),
+	msgid       VARCHAR(36),
 	msgfrom     VARCHAR(300),
 	msgsubject  TEXT,
 	msgrpdrefid TEXT,
