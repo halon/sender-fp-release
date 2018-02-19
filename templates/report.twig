@@ -1,53 +1,55 @@
 {% extends "base.twig" %}
 
 {% block content %}
+
+{% set states = {'-1': 'info', '0': 'danger', '1': 'success'} %}
+{% set currentState = report.found %}
+
+<div id="error" class="alert alert-danger" hidden>
+	<span id="error-msg"></span>
+	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+		<span aria-hidden="true">&times;</span>
+	</button>
+</div>
 <div class="row">
 	<div class="col-md-6">
-		{% block alerts %}
-		{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
-		{% endblock %}
-		{% if report.result == null %}
-		<div class="panel panel-success">
-			<div class="panel-heading">
-				<h3 class="panel-title">Report blocked email</h3>
-			</div>
-			<div class="panel-body">
-				<form method="post">
+		<div id="report-card" class="card{% if currentState != '' %} border-{{ states[currentState] }}{% endif %}">
+			<div class="card-body">
+				<h4 class="card-title">Report blocked email</h4>
+				<form id="report-form">
+					<input type="hidden" id="node" value="{{ node }}">
+					<input type="hidden" id="msgid" value="{{ msgid }}">
+					<input type="hidden" id="state" value="{{ currentState }}">
 					<div class="form-group">
 						<label for="comment">Comment <span class="text-muted">(visible to the recipient)</span></label>
-						<textarea name="comment" class="form-control">{% if report.comment is defined %}{{report.comment|e}}{% endif %}</textarea>
+						<textarea name="comment" id="comment" class="form-control">{% if report.comment is defined %}{{ report.comment }}{% endif %}</textarea>
 					</div>
-					<button name="report" type="submit" class="btn btn-success pull-right">
-						<span class="glyphicon glyphicon-send"></span>
-						Notify recipient
+					<button type="submit" name="btn-report" id="btn-report" class="btn btn-{{ currentState == '' ? 'success' : states[currentState] }} float-right">
+						<span id="btn-notify-label"><i class="far fa-paper-plane"></i>&nbsp;Notify recipient</span>
+						<span id="btn-loading-label" hidden><i class="fas fa-spinner fa-spin"></i>&nbsp;Processing...</span>
 					</button>
-					<div class="g-recaptcha" data-size="compact" data-sitekey="{{report.recaptcha_sitekey}}"></div>
+					<div id="recaptcha-div" class="g-recaptcha" data-size="compact" data-sitekey="{{ report.recaptcha_sitekey }}"></div>
 				</form>
 			</div>
+			<div id="report-footer" {% if currentState != '' %}class="card-footer alert-{{ states[currentState] }}"{% else %}class="card-footer" hidden{% endif %}>
+				<span id="status-loading" {% if currentState != '-1' %}hidden{% endif %}>Please wait while the email is being located.</span>
+				<span id="status-error" {% if currentState != '0' %}hidden{% endif %}><strong>The email couldn't be found!</strong> It might be more than a day since it was sent; we only store blocked email for 24 hours. Please contact the recipient(s) by some other mean.</span>
+				<span id="status-success" {% if currentState != '1' %}hidden{% endif %}><strong>Thanks for the report!</strong> The recipient(s) have been notified.</span>
+			</div>
 		</div>
-		{% elseif report.result.found == -1 %}
-		<div class="alert alert-info"><strong>Loading...</strong> Please wait while the email is being located.</div>
-		<script>setTimeout('location.reload()', 1000);</script>
-		{% elseif report.result.found == 0 %}
-		<div class="alert alert-danger"><strong>The email couldn't be found!</strong> It might be more than a day since it was sent; we only store blocked email for 24 hours. Please contact the recipient(s) by some other mean.</div>
-		{% elseif report.result.found == 1 %}
-		<div class="alert alert-success"><strong>Thanks for the report!</strong> The recipient(s) have been notified.</div>
-		{% endif %}
 	</div>
 	<div class="col-md-6">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">What has happened?</h3>
-			</div>
-			<div class="panel-body small">
-				<p>
+		<div class="card">
+			<div class="card-body">
+				<h4 class="card-title">What has happened?</h4>
+				<p class="card-text">
 					You probably came to this web page because
 					your email was blocked by the spam filter,
 					and pressed the link in the error report you
 					received. <strong>We're very sorry that your
 					email was blocked.</strong>
 				</p>
-				<p>
+				<p class="card-text">
 					Please provide some information about
 					what was in your email and press
 					the "Notify recipient" button. If the email 

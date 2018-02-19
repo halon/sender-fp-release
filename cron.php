@@ -8,12 +8,14 @@ require_once BASE.'/vendor/autoload.php';
 
 $soap_options = [];
 foreach ($soap_hosts as $host => $options) {
+	$context = stream_context_create(['ssl' => $options['tls'] ?? []]);
 	$soap_options[$host] = [
 		'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
 		'location' => $options['address'].'/remote/',
 		'uri' => 'urn:halon',
 		'login' => $options['username'],
-		'password' => $options['password']
+		'password' => $options['password'],
+		'stream_context' => $context
 	];
 }
 

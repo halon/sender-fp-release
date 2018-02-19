@@ -1,78 +1,74 @@
 {% extends "base.twig" %}
 
 {% block content %}
+
+{% set states = {'0': 'warning', '1': 'info', '2': 'success'} %}
+{% set currentState = release.result.status %}
+
+<div id="error" class="alert alert-danger" hidden>
+	<span id="error-msg"></span>
+	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+		<span aria-hidden="true">&times;</span>
+	</button>
+</div>
 <div class="row">
 	<div class="col-md-6">
-		{% block alerts %}
-		{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
-		{% endblock %}
-		<div class="alert alert-warning">
-			<strong>Warning!</strong>
-			This is an email which was blocked
-			by an anti-spam/virus filter. Just like any other email,
-			it may contain malicious content.
-		</div>
-		{% if release.result.status == 2 %}
-		<div class="alert alert-success"><strong>Done!</strong> The email has been released, and is on its way to you.</div>
-		{% elseif release.result.status == 1 %}
-		<div class="alert alert-info"><strong>Sending...</strong> Please wait while the email is being sent to you.</div>
-		<script>setTimeout('location.reload()', 1000);</script>
-		{% elseif release.result.status == 0 %}
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title">Release blocked email</h3>
-			</div>
-			<div class="panel-body">
-				<dl class="dl-horizontal" style="overflow-wrap: break-word">
-					<dt>Sender's comment</dt>
-					<dd>{{release.result.comment|e}}</dd>
-					<dt>From</dt>
-					<dd>{{release.result.msgfrom|e}}</dd>
-					<dt>To</dt>
-					<dd>{{release.result.msgto|e}}</dd>
-					<dt>Subject</dt>
-					<dd>{{release.result.msgsubject|e}}</dd>
+		<div class="card border-{{ states[currentState] }} mb-3" id="release-card">
+			<div class="card-body">
+				<h4 class="card-title">Release blocked email</h4>
+				<dl class="row" style="overflow-wrap: break-word">
+					<dt class="col-sm-4">Sender's comment</dt>
+					<dd class="col-sm-8">{{ release.result.comment }}</dd>
+					<dt class="col-sm-4">From</dt>
+					<dd class="col-sm-8">{{ release.result.msgfrom }}</dd>
+					<dt class="col-sm-4">To</dt>
+					<dd class="col-sm-8">{{ release.result.msgto }}</dd>
+					<dt class="col-sm-4">Subject</dt>
+					<dd class="col-sm-8">{{ release.result.msgsubject }}</dd>
 				</dl>
-				<form method="post">
-					<button class="btn btn-primary pull-right" name="release" type="submit">
-						<span class="glyphicon glyphicon-send"></span>
-						Release
+				<form id="release-form">
+					<input type="hidden" id="id" value="{{ id }}">
+					<input type="hidden" id="token" value="{{ token }}">
+					<input type="hidden" id="state" value="{{ currentState }}">
+					<button class="btn btn-{{ states[currentState] }} float-right" name="btn-release" id="btn-release" type="submit">
+						<span id="btn-release-label"><i class="far fa-paper-plane"></i>&nbsp;Release</span>
+						<span id="btn-sending-label" hidden><i class="fas fa-spinner fa-spin"></i>&nbsp;Sending...</span>
 					</button>
 				</form>
 			</div>
+			<div class="card-footer alert-{{ states[currentState] }}" id="release-footer">
+				<span id="status-warning" {% if currentState != 0 %}hidden{% endif %}><strong>Warning!</strong> This is an email which was blocked by an anti-spam/virus filter. Just like any other email, it may contain malicious content.</span>
+				<span id="status-sending" {% if currentState != 1 %}hidden{% endif %}>Please wait while the email is being sent to you.</span>
+				<span id="status-success" {% if currentState != 2 %}hidden{% endif %}><strong>Done!</strong> The email has been released, and is on its way to you.</span>
+			</div>
 		</div>
-		{% endif %}
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">
-					<a role="button" data-toggle="collapse" href="#collapse_tech">
-						Technical information
-					</a>
-				</h3>
+		<div class="card mb-3">
+			<div class="card-header">
+				<a class="text-secondary" role="button" data-toggle="collapse" href="#collapseTech"  aria-expanded="false" aria-controls="collapseTech">
+					Technical information
+				</a>
 			</div>
-			<div id="collapse_tech" class="panel-collapse collapse">
-			<div class="panel-body">
-				<dl class="dl-horizontal" style="overflow-wrap: break-word">
-					<dt>RPD</dt>
-					<dd>{{release.rpdscores[release.result.msgrpdscore]|e}}</dd>
-					<dt>Reference</dt>
-					<dd>{{release.result.msgrpdrefid|e}}</dd>
-					<dt>ID</dt>
-					<dd>{{release.result.msgid|e}}</dd>
-					<dt>Node</dt>
-					<dd>{{release.result.node|e}}</dd>
-				</dl>
-			</div>
+			<div id="collapseTech" class="collapse">
+				<div class="card-body">
+					<dl class="row card-text" style="overflow-wrap: break-word">
+						<dt class="col-sm-3">RPD</dt>
+						<dd class="col-sm-9">{{ release.rpdscores[release.result.msgrpdscore] }}</dd>
+						<dt class="col-sm-3">Reference</dt>
+						<dd class="col-sm-9">{{ release.result.msgrpdrefid }}</dd>
+						<dt class="col-sm-3">ID</dt>
+						<dd class="col-sm-9">{{ release.result.msgid }}</dd>
+						<dt class="col-sm-3">Node</dt>
+						<dd class="col-sm-9">{{ release.result.node }}</dd>
+					</dl>
+				</div>
 			</div>
 		</div>
 	</div>
 	<div class="col-md-6">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">What has happened?</h3>
-			</div>
-			<div class="panel-body small">
-				<p>
+		<div class="card">
+			<div class="card-body">
+				<h4 class="card-title">What has happened?</h4>
+				<p class="card-text">
 					You probably came to this page because someone sent
 					an email to you, which was blocked (and quarantined)
 					by the spam/virus filter.
@@ -80,40 +76,40 @@
 					option to report this to you (after passing a
 					<a href="https://en.wikipedia.org/wiki/CAPTCHA">CAPTCHA</a> test).
 				</p>
-				<p>
+				<p class="card-text">
 					Within 7 days after being sent, you can release this email
 					from the quarantine. If you press the "Release" button to the
 					left, the email will be sent to you.
 					<strong>Please keep in mind that the message, just like any other
 					email, could contain malicious content!</strong>
 				</p>
-				<p>
+				<p class="card-text">
 					This is the complete process:
-					<ol>
-						<li>Someone (the <em>sender</em>) sends an email to you</li>
-						<li>
-							The email is blocked, but
-							<ul>
-								<li>The email is retained on our servers for 1 day</li>
-								<li>The sender receives a bounce (notification) with a report link</li>
-							</ul>
-						</li>
-						<li>
-							The sender follows the link in the bounce and presses the button, which
-							<ul>
-								<li>Extends the retention period of the email to 7 days</li>
-								<li>Generates an email to you with a link</li>
-							</ul>
-						</li>
-						<li>
-							You follow the link in that report, and end up on this page
-							<ul>
-								<li>If you release the email within 7 days, it will be delivered to you</li>
-								<li>If the email was legitimate, we encourage you to report this incident to your administrator (including the text from the technical information panel)</li>
-							</ul>
-						</li>
-					</ol>
 				</p>
+				<ol class="card-text">
+					<li>Someone (the <em>sender</em>) sends an email to you</li>
+					<li>
+						The email is blocked, but
+						<ul>
+							<li>The email is retained on our servers for 1 day</li>
+							<li>The sender receives a bounce (notification) with a report link</li>
+						</ul>
+					</li>
+					<li>
+						The sender follows the link in the bounce and presses the button, which
+						<ul>
+							<li>Extends the retention period of the email to 7 days</li>
+							<li>Generates an email to you with a link</li>
+						</ul>
+					</li>
+					<li>
+						You follow the link in that report, and end up on this page
+						<ul>
+							<li>If you release the email within 7 days, it will be delivered to you</li>
+							<li>If the email was legitimate, we encourage you to report this incident to your administrator (including the text from the technical information panel)</li>
+						</ul>
+					</li>
+				</ol>
 			</div>
 		</div>
 	</div>
