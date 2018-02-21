@@ -10,7 +10,7 @@ if (isset($_POST['page']) && $_POST['page'] == 'report') {
 			throw new UIException('Missing argument');
 
 		$url = 'https://www.google.com/recaptcha/api/siteverify';
-		$url .= '?secret='.$recaptcha_secret;
+		$url .= '?secret='.$settings['recaptcha_secret'];
 		$url .= '&response='.urlencode($_POST['g-recaptcha-response']);
 		$url .= '&remoteip='.$_SERVER['REMOTE_ADDR'];
 		$res = json_decode(file_get_contents($url), true);
@@ -61,7 +61,7 @@ if (isset($_POST['page']) && $_POST['page'] == 'check') {
 			$q = $dbh->prepare('SELECT found FROM release_sender WHERE msgid = :msgid AND node = :node;');
 			$q->execute([':msgid' => $_POST['msgid'], ':node' => $_POST['node']]);
 			$result = $q->fetch(PDO::FETCH_ASSOC);
-			if (!isset($soap_hosts[$_POST['node']]))
+			if (!isset($settings['soap_hosts'][$_POST['node']]))
 				throw new UIException('Invalid node.');
 
 			die(json_encode(['status' => 'ok', 'result' => $result]));

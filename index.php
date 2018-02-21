@@ -32,14 +32,14 @@ try {
 		$q = $dbh->prepare('SELECT found, comment FROM release_sender WHERE msgid = :msgid AND node = :node;');
 		$q->execute([':msgid' => $_GET['msgid'], ':node' => $_GET['node']]);
 		$result = $q->fetch(PDO::FETCH_ASSOC);
-		if (!isset($soap_hosts[$_GET['node']]))
+		if (!isset($settings['soap_hosts'][$_GET['node']]))
 			throw new UIException('Invalid node "'.$_GET['node'].'", please check your link.');
 
 		if (isset($result['comment']))
 			$report['comment'] = $result['comment'];
 		else
 			$report['comment'] = (isset($_POST['comment'])) ? $_POST['comment'] : null;
-		$report['recaptcha_sitekey'] = $recaptcha_sitekey;
+		$report['recaptcha_sitekey'] = $settings['recaptcha_sitekey'];
 		$report['found'] = (isset($result['found'])) ? $result['found'] : null;
 	} else {
 		throw new UIException('Invalid link.');
@@ -57,7 +57,7 @@ echo $twig->render($page.'.twig', [
 	'token' => isset($_GET['token']) ? $_GET['token'] : null,
 	'id' => isset($_GET['id']) ? $_GET['id'] : null,
 	'javascript' => isset($javascript) ? $javascript : [],
-	'template' => isset($template) ? $template : [],
+	'template' => isset($settings['template']) ? $settings['template'] : [],
 	'pageerror' => isset($pageerror) ? $pageerror : null,
 	'release' => isset($release) ? $release : null,
 	'report' => isset($report) ? $report : null

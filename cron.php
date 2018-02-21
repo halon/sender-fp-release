@@ -7,7 +7,7 @@ require_once BASE.'/settings.php';
 require_once BASE.'/vendor/autoload.php';
 
 $soap_options = [];
-foreach ($soap_hosts as $host => $options) {
+foreach ($settings['soap_hosts'] as $host => $options) {
 	$context = stream_context_create(['ssl' => $options['tls'] ?? []]);
 	$soap_options[$host] = [
 		'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
@@ -38,7 +38,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	echo "Fetching $id from ".$host_options['location']."\n";
 	try {
 		$client = new SoapClient($host_options['location'].'?wsdl', $host_options);
-		$items = $client->mailQueue(array('filter' => 'messageid='.$id.' quarantine='.$quarantine_short, 'offset' => '0', 'limit' => 50));
+		$items = $client->mailQueue(array('filter' => 'messageid='.$id.' quarantine='.$settings['quarantine_short'], 'offset' => '0', 'limit' => 50));
 	} catch (Exception $e) {
 		echo $e->getMessage();
 		continue;
@@ -69,7 +69,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 		// Move to long-term quarantine
 		try {
 			$client = new SoapClient($host_options['location'].'?wsdl', $host_options);
-			$items = $client->mailQueueUpdateBulk(array('filter' => 'messageid='.$id.' quarantine='.$quarantine_short, 'fields' => [["first"=>"quarantine", "second"=>$quarantine_long]]));
+			$items = $client->mailQueueUpdateBulk(array('filter' => 'messageid='.$id.' quarantine='.$settings['quarantine_short'], 'fields' => [["first"=>"quarantine", "second"=>$settings['quarantine_long']]]));
 		} catch (Exception $e) {
 			echo $e->getMessage();
 			continue;
@@ -94,7 +94,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 			$row2 = $q2->fetch(PDO::FETCH_ASSOC);
 			$insertid = $row2['id']; 
 		}
-		mail($mail->msgto, $mail_template['subject'], $twig->render('mail.twig', ['msgfrom' => $mail->msgfrom, 'template' => $template, 'id' => $insertid, 'token' => $token]), implode("\r\n", $mail_template['headers']));
+		mail($mail->msgto, $settings['mail_template']['subject'], $twig->render('mail.twig', ['msgfrom' => $mail->msgfrom, 'template' => $settings['template'], 'id' => $insertid, 'token' => $token]), implode("\r\n", $settings['mail_template']['headers']));
 	}
 }
 
