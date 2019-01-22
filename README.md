@@ -1,4 +1,4 @@
-Self-service "false positive" (blocked email) report and release system for Halon's email gateway. Please read more on http://wiki.halon.io and http://halon.io
+Self-service "false positive" (blocked email) report and release system for Halon's email gateway. Please read more on http://halon.io
 
 Description
 -----------
