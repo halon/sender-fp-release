@@ -32,7 +32,7 @@ Add the following code to the DATA flow (or an include file) or some variant of 
 ```
 function Reject($msg) {
         ...
-        if (MIME("0")->getSize() < 10*1024*1024) {
+        if (GetMailMessage()->getSize() < 10*1024*1024) {
                 global $messageid;
                 builtin Quarantine("mailquarantine:X", ["done" => false, "reject" => false]);
                 $node = explode(".", gethostname())[0];
@@ -46,6 +46,7 @@ and add the following API script, where you replace "XXX" with the SHA1 hash of 
 
 ```
 if ($username == "reportfp" and sha1($password) == "XXX") {
+        if ($soapcall == "login") Authenticate();
         if ($soapcall == "mailQueue") Authenticate();
         if ($soapcall == "mailQueueRetry") Authenticate();
         if ($soapcall == "mailQueueUpdateBulk") Authenticate();
