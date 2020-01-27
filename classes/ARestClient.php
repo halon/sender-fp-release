@@ -71,7 +71,7 @@ class ARestClient
 		$url = parse_url($this->host);
 		if (!isset($url['port'])) $url['port'] = ($url['scheme'] === 'https' ? 443 : 80);
 
-		$uri = "api/1.2.0$path";
+		$uri = $path === '/protobuf' ? 'api/protobuf' : "api/5.3.0$path";
 		if (isset($query)) {
 			$uri .= '?'.http_build_query($query);
 		}
@@ -111,7 +111,9 @@ class ARestClient
 			$proxy['port'] ?? $url['port'],
 			$this->timeout,
 			$this->tls,
-			$request, $proxy_request);
+			$request,
+			$proxy_request
+		);
 
 		RestStreamSocketPool::Get()->add($socket);
 

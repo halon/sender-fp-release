@@ -37,39 +37,60 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	echo "Fetching $id from ".$host_options['host']."\n";
 	try {
 		$client = new RestClient($host_options);
-		$items = $client->operation("/email/queue/$id", 'GET')->body;
+		$items = $client->operation('/protobuf', 'POST', null, [
+			'command' => 'F',
+			'program' => 'smtpd',
+			'payload' => [
+				'conditions' => [
+					'ids' => [
+						['transaction' => $id]
+					]
+				]
+			]
+		])->body->items;
 	} catch (RestException $e) {
 		echo $e->getMessage();
 		continue;
 	}
-	$items->email = array_filter($items->email, function ($email) { global $settings; return 'mailquarantine:'.$email->quarantine === $settings['quarantine_short']; });
-	if (count($items->email) < 1) {
+	$items = array_filter($items, function ($email) { global $settings; return 'mailquarantine:'.$email->metadata->{'_quarantineid'} === $settings['quarantine_short']; });
+	if (count($items) < 1) {
 		echo "Email not found\n";
 		$q2 = $dbh->prepare('UPDATE release_sender SET found=0 WHERE id = :id;');
 		$q2->execute([':id' => $row['id']]);
 		continue;
 	}
-	$mail = $items->email[0];
+	$mail = $items[0];
 	$rpdscore = -1;
 	$rpdrefid = '';
-	if (isset($mail->scores->rpd)) {
-		$rpdscore = $mail->scores->rpd->score;
-		$rpdrefid = $mail->scores->rpd->refid;
+	if (isset($mail->metadata) && isset($mail->metadata->{'_scores.rpd.refid'}) && isset($mail->metadata->{'_scores.rpd.score'})) {
+		$rpdscore = $mail->metadata->{'_scores.rpd.score'};
+		$rpdrefid = $mail->metadata->{'_scores.rpd.refid'};
 	}
 	$q2 = $dbh->prepare('UPDATE release_sender SET found=1,msgfrom=:msgfrom,msgsubject=:msgsubject,msgrpdscore=:msgrpdscore,msgrpdrefid=:msgrpdrefid WHERE id = :id;');
 	$q2->execute([
 		':id' => $row['id'],
-		':msgfrom' => $mail->from,
+		':msgfrom' => isset($mail->sender) ? strtolower($mail->sender->localpart.'@'.$mail->sender->domain) : '',
 		':msgsubject' => $mail->subject,
 		':msgrpdscore' => $rpdscore,
 		':msgrpdrefid' => $rpdrefid,
 	]);
-	foreach ($items->email as $mail) {
+	foreach ($items as $mail) {
 		sleep(3);
 		// Move to long-term quarantine
 		try {
 			$client = new RestClient($host_options);
-			$client->operation("/email/queue/{$mail->messageid}/{$mail->actionid}", 'PATCH', null, ['fields' => ['quarantine' => substr($settings['quarantine_long'], 15)]]);
+			$client->operation('/protobuf', 'POST', null, [
+				'command' => 'G',
+				'program' => 'smtpd',
+				'payload' => [
+					'conditions' => [
+						'ids' => [$mail->id]
+					],
+					'metadata' => [
+						'_quarantineid' => substr($settings['quarantine_long'], 15)
+					]
+				]
+			]);
 		} catch (RestException $e) {
 			echo $e->getMessage();
 			continue;
@@ -78,8 +99,8 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 		$q2 = $dbh->prepare('INSERT INTO release_rcpt (release_id,queueid,msgto,token) VALUES (:id,:queueid,:msgto,:token);');
 		$q2->execute([
 			':id' => $row['id'],
-			':queueid' => $mail->actionid,
-			':msgto' => $mail->to,
+			':queueid' => $mail->id->queue,
+			':msgto' => strtolower($mail->recipient->localpart.'@'.$mail->recipient->domain),
 			':token' => $token,
 		]);
 		$insertid = $dbh->lastInsertId();
@@ -88,13 +109,18 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 			$q2 = $dbh->prepare('SELECT id FROM release_rcpt WHERE release_id = :id AND queueid = :queueid AND token = :token;');
 			$q2->execute([
 				':id' => $row['id'],
-				':queueid' => $mail->actionid,
+				':queueid' => $mail->id->queue,
 				':token' => $token,
 			]);
 			$row2 = $q2->fetch(PDO::FETCH_ASSOC);
 			$insertid = $row2['id']; 
 		}
-		mail($mail->to, $settings['mail_template']['subject'], $twig->render('mail.twig', ['msgfrom' => $mail->from, 'template' => $settings['template'], 'id' => $insertid, 'token' => $token]), implode("\r\n", $settings['mail_template']['headers']));
+		mail(strtolower($mail->recipient->localpart.'@'.$mail->recipient->domain), $settings['mail_template']['subject'], $twig->render('mail.twig', [
+			'msgfrom' => isset($mail->sender) ? strtolower($mail->sender->localpart.'@'.$mail->sender->domain) : '',
+			'template' => $settings['template'],
+			'id' => $insertid,
+			'token' => $token
+		]), implode("\r\n", $settings['mail_template']['headers']));
 	}
 }
 
@@ -107,7 +133,23 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	echo "Release $msgid:$id from ".$host_options['host']."\n";
 	try {
 		$client = new RestClient($host_options);
-		$client->operation("/email/queue/{$msgid}/{$id}:retry", 'POST');
+		$client->operation('/protobuf', 'POST', null, [
+			'command' => 'G',
+			'program' => 'smtpd',
+			'payload' => [
+				'conditions' => [
+					'ids' => [
+						[
+							'transaction' => $msgid,
+							'queue' => $id
+						]
+					]
+				],
+				'move' => [
+					'queue' => 'ACTIVE'
+				]
+			]
+		]);
 	} catch (RestException $e) {
 		if ($e->getCode() === 404) {
 			$q2 = $dbh->prepare('UPDATE release_rcpt SET status = -1 WHERE id = :id;');
