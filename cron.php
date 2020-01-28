@@ -146,7 +146,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 					]
 				],
 				'move' => [
-					'queue' => 'ACTIVE'
+					'queue' => 0 // "ACTIVE"
 				]
 			]
 		]);
