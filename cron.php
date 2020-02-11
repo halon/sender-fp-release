@@ -69,7 +69,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 	$q2 = $dbh->prepare('UPDATE release_sender SET found=1,msgfrom=:msgfrom,msgsubject=:msgsubject,msgrpdscore=:msgrpdscore,msgrpdrefid=:msgrpdrefid WHERE id = :id;');
 	$q2->execute([
 		':id' => $row['id'],
-		':msgfrom' => isset($mail->sender) ? strtolower($mail->sender->localpart.'@'.$mail->sender->domain) : '',
+		':msgfrom' => isset($mail->sender) && $mail->sender->localpart && $mail->sender->domain ? strtolower($mail->sender->localpart.'@'.$mail->sender->domain) : '',
 		':msgsubject' => $mail->subject,
 		':msgrpdscore' => $rpdscore,
 		':msgrpdrefid' => $rpdrefid,
@@ -116,7 +116,7 @@ while ($row = $q->fetch(PDO::FETCH_ASSOC)) {
 			$insertid = $row2['id']; 
 		}
 		mail(strtolower($mail->recipient->localpart.'@'.$mail->recipient->domain), $settings['mail_template']['subject'], $twig->render('mail.twig', [
-			'msgfrom' => isset($mail->sender) ? strtolower($mail->sender->localpart.'@'.$mail->sender->domain) : '',
+			'msgfrom' => isset($mail->sender) && $mail->sender->localpart && $mail->sender->domain ? strtolower($mail->sender->localpart.'@'.$mail->sender->domain) : '',
 			'template' => $settings['template'],
 			'id' => $insertid,
 			'token' => $token
