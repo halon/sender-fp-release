@@ -21,6 +21,11 @@ Installation
 1. Navigate to the sender-fp-release directory and run `composer install` to install any dependencies.
 2. Run the SQL queries listed in the text file for the database type you want to use to create the necessary tables.
 3. Copy the `/settings-default.php` file to `/settings.php` and open it to change the settings.
+4. Adjust the following line as needed and add it to your crontab file
+
+```
+* * * * * /usr/bin/php /var/www/html/cron.php
+```
 
 Halon integration
 ------------------
