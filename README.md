@@ -27,7 +27,7 @@ Halon integration
 
 Begin by creating two quarantines with comments such as "Sender FP release - short" and "Sender FP release - long".
 
-Add the following code to the DATA flow (or an include file) or some variant of it, and replace "X" with the quarantine ID of the short one:
+Add the following code to the EOD rcpt script (or an include file) or some variant of it, and replace "X" with the quarantine ID of the short one:
 
 ```
 function Reject($msg) {
