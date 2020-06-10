@@ -41,14 +41,3 @@ function Reject($msg) {
         builtin Reject($msg);
 }
 ```
-
-and add the following API script, where you replace "XXX" with the SHA1 hash of the password from settings.php: 
-
-```
-if ($username == "reportfp" and sha1($password) == "XXX") {
-        if ($soapcall == "login") Authenticate();
-        if ($soapcall == "mailQueue") Authenticate();
-        if ($soapcall == "mailQueueRetry") Authenticate();
-        if ($soapcall == "mailQueueUpdateBulk") Authenticate();
-}
-```
